@@ -1,4 +1,5 @@
-const express = require('express')
+import express from 'express'
+import crypto from 'crypto'
 
 const app = express()
 
@@ -6,21 +7,39 @@ app.use(express.json())
 
 let agendamentos = []
 
+const servicos = ['corte', 'barba', 'sobrancelha']
+
 // Criar
 app.post('/agendamentos', (req, res) => {
-  const { id, nome, servico, data, hora } = req.body
+  const { nome, servico, data, hora } = req.body
 
-  if (!id || !nome || !servico || !data || !hora) {
+  if (!servico || !data || !hora) {
     return res.status(400).json({ erro: 'Campos obrigatórios faltando' })
   }
 
-  const existe = agendamentos.find((a) => a.data === data && a.hora === hora)
+  if (!nome || nome.trim() === '') {
+    return res.status(400).json({ erro: 'Nome inválido' })
+  }
+
+  if (!servicos.includes(servico)) {
+    return res.status(400).json({ erro: 'Serviço inválido' })
+  }
+
+  const existe = agendamentos.find(
+    (item) => item.data === data && item.hora === hora
+  )
 
   if (existe) {
     return res.status(400).json({ erro: 'Horário já ocupado' })
   }
 
-  const novo = { id, nome, servico, data, hora }
+  const novo = {
+    id: crypto.randomUUID(),
+    nome,
+    servico,
+    data,
+    hora,
+  }
 
   agendamentos.push(novo)
 
@@ -36,7 +55,7 @@ app.get('/agendamentos', (req, res) => {
 app.get('/agendamentos/:id', (req, res) => {
   const { id } = req.params
 
-  const registro = agendamentos.find((item) => item.id === Number(id))
+  const registro = agendamentos.find((item) => item.id === id)
 
   if (!registro) {
     return res.status(404).json({ erro: 'Não encontrado' })
@@ -50,32 +69,51 @@ app.put('/agendamentos/:id', (req, res) => {
   const { id } = req.params
   const dados = req.body
 
-  let encontrado = false
+  const index = agendamentos.findIndex((item) => item.id === id)
 
-  agendamentos = agendamentos.map((item) => {
-    if (item.id === Number(id)) {
-      encontrado = true
-      return { ...item, ...dados }
-    }
-    return item
-  })
-
-  if (!encontrado) {
+  if (index === -1) {
     return res.status(404).json({ erro: 'Não encontrado' })
   }
 
-  res.json({ mensagem: 'Atualizado com sucesso' })
+  const atual = agendamentos[index]
+  const atualizado = { ...atual, ...dados }
+
+  // valida nome
+  if (atualizado.nome && atualizado.nome.trim() === '') {
+    return res.status(400).json({ erro: 'Nome inválido' })
+  }
+
+  // valida serviço
+  if (atualizado.servico && !servicos.includes(atualizado.servico)) {
+    return res.status(400).json({ erro: 'Serviço inválido' })
+  }
+
+  // valida conflito de horário
+  const conflito = agendamentos.find(
+    (item) =>
+      item.data === atualizado.data &&
+      item.hora === atualizado.hora &&
+      item.id !== id
+  )
+
+  if (conflito) {
+    return res.status(400).json({ erro: 'Horário já ocupado' })
+  }
+
+  agendamentos[index] = atualizado
+
+  res.json(atualizado)
 })
 
 // Deletar
 app.delete('/agendamentos/:id', (req, res) => {
   const { id } = req.params
 
-  agendamentos = agendamentos.filter((item) => item.id !== Number(id))
+  agendamentos = agendamentos.filter((item) => item.id !== id)
 
   res.status(204).send()
 })
 
 app.listen(3000, () => {
-  console.log('Servidor rodando')
+  console.log('Servidor rodando na porta 3000')
 })
