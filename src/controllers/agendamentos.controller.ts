@@ -1,14 +1,14 @@
-//agendamento.controller.ts
+//agendamentos.controller.ts
 import { Request, Response } from 'express'
 import crypto from 'crypto'
 import {
   Agendamento,
   agendamentos,
-  AtualizarAgendamentos,
+  atualizarAgendamentos,
   servicos,
-} from '../server.js'
+} from '../database/agendamentos'
 
-export function CriarAgendamento(req: Request, res: Response) {
+export function criarAgendamento(req: Request, res: Response) {
   const { nome, servico, data, hora } = req.body as Agendamento
 
   if (!servico || !data || !hora) {
@@ -44,11 +44,11 @@ export function CriarAgendamento(req: Request, res: Response) {
   res.status(201).json(novo)
 }
 
-export function ListarAgendamentos(req: Request, res: Response) {
+export function listarAgendamentos(req: Request, res: Response) {
   res.json(agendamentos)
 }
 
-export function BuscarPorId(req: Request, res: Response) {
+export function buscarPorId(req: Request, res: Response) {
   const { id } = req.params
 
   const registro = agendamentos.find((item) => item.id === id)
@@ -60,7 +60,7 @@ export function BuscarPorId(req: Request, res: Response) {
   res.json(registro)
 }
 
-export function AtualizarAgendamento(req: Request, res: Response) {
+export function atualizarAgendamento(req: Request, res: Response) {
   const { id } = req.params
   const dados = req.body
 
@@ -70,7 +70,7 @@ export function AtualizarAgendamento(req: Request, res: Response) {
     return res.status(404).json({ erro: 'Não encontrado' })
   }
 
-  const atual = agendamentos[index]
+  const atual = agendamentos[index]!
   const atualizado = { ...atual, ...dados }
 
   // valida nome
@@ -100,12 +100,12 @@ export function AtualizarAgendamento(req: Request, res: Response) {
   res.json(atualizado)
 }
 
-export function DeletarAgendamento(req: Request, res: Response) {
+export function deletarAgendamento(req: Request, res: Response) {
   const { id } = req.params
 
   const novaLista = agendamentos.filter((item) => item.id !== id)
 
-  AtualizarAgendamentos(novaLista)
+  atualizarAgendamentos(novaLista)
 
   res.status(204).send()
 }

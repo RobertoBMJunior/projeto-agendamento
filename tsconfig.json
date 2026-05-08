@@ -1,22 +1,16 @@
 {
   "compilerOptions": {
     "target": "ES2020",
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
-
+    "module": "commonjs",
     "rootDir": "./src",
     "outDir": "./dist",
 
     "strict": true,
     "esModuleInterop": true,
 
-    /* Adicione/Mantenha estas para garantir compatibilidade com node_modules */
     "types": ["node"],
-    "skipLibCheck": true,
 
-    /* Se você quiser importar sem usar .js ou .ts no final (o mais comum) */
-    "moduleDetection": "force",
-    "allowJs": true
+    "skipLibCheck": true
   },
 
   "include": ["src"]

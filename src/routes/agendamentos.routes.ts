@@ -1,27 +1,26 @@
 //agendamentos.routes.ts
 import { Router } from 'express'
 import {
-  AtualizarAgendamento,
-  BuscarPorId,
-  CriarAgendamento,
-  DeletarAgendamento,
-  ListarAgendamentos,
-} from '../controllers/agendamento.controller.js'
+  atualizarAgendamento,
+  buscarPorId,
+  criarAgendamento,
+  deletarAgendamento,
+  listarAgendamentos,
+} from '../controllers/agendamentos.controller'
 
 export const agendamentosRoutes = Router()
 
-
 // Criar
-agendamentosRoutes.post('/agendamentos', CriarAgendamento)
+agendamentosRoutes.post('/', criarAgendamento)
 
 // Listar todos
-agendamentosRoutes.get('/agendamentos', ListarAgendamentos)
+agendamentosRoutes.get('/', listarAgendamentos)
 
 // Buscar por ID
-agendamentosRoutes.get('/agendamentos/:id', BuscarPorId)
+agendamentosRoutes.get('/:id', buscarPorId)
 
 // Atualizar
-agendamentosRoutes.put('/agendamentos/:id', AtualizarAgendamento)
+agendamentosRoutes.put('/:id', atualizarAgendamento)
 
 // Deletar
-agendamentosRoutes.delete('/agendamentos/:id', DeletarAgendamento)
+agendamentosRoutes.delete('/:id', deletarAgendamento)
