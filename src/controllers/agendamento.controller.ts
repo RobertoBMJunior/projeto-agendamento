@@ -1,17 +1,15 @@
-import express from 'express'
+//agendamento.controller.ts
+import { Request, Response } from 'express'
 import crypto from 'crypto'
+import {
+  Agendamento,
+  agendamentos,
+  AtualizarAgendamentos,
+  servicos,
+} from '../server.js'
 
-const app = express()
-
-app.use(express.json())
-
-let agendamentos = []
-
-const servicos = ['corte', 'barba', 'sobrancelha']
-
-// Criar
-app.post('/agendamentos', (req, res) => {
-  const { nome, servico, data, hora } = req.body
+export function CriarAgendamento(req: Request, res: Response) {
+  const { nome, servico, data, hora } = req.body as Agendamento
 
   if (!servico || !data || !hora) {
     return res.status(400).json({ erro: 'Campos obrigatórios faltando' })
@@ -44,15 +42,13 @@ app.post('/agendamentos', (req, res) => {
   agendamentos.push(novo)
 
   res.status(201).json(novo)
-})
+}
 
-// Listar todos
-app.get('/agendamentos', (req, res) => {
+export function ListarAgendamentos(req: Request, res: Response) {
   res.json(agendamentos)
-})
+}
 
-// Buscar por ID
-app.get('/agendamentos/:id', (req, res) => {
+export function BuscarPorId(req: Request, res: Response) {
   const { id } = req.params
 
   const registro = agendamentos.find((item) => item.id === id)
@@ -62,10 +58,9 @@ app.get('/agendamentos/:id', (req, res) => {
   }
 
   res.json(registro)
-})
+}
 
-// Atualizar
-app.put('/agendamentos/:id', (req, res) => {
+export function AtualizarAgendamento(req: Request, res: Response) {
   const { id } = req.params
   const dados = req.body
 
@@ -103,17 +98,14 @@ app.put('/agendamentos/:id', (req, res) => {
   agendamentos[index] = atualizado
 
   res.json(atualizado)
-})
+}
 
-// Deletar
-app.delete('/agendamentos/:id', (req, res) => {
+export function DeletarAgendamento(req: Request, res: Response) {
   const { id } = req.params
 
-  agendamentos = agendamentos.filter((item) => item.id !== id)
+  const novaLista = agendamentos.filter((item) => item.id !== id)
+
+  AtualizarAgendamentos(novaLista)
 
   res.status(204).send()
-})
-
-app.listen(3000, () => {
-  console.log('Servidor rodando na porta 3000')
-})
+}
