@@ -1,14 +1,14 @@
 //agendamentos.controller.ts
 import { Request, Response } from 'express'
-import crypto from 'crypto'
 import {
   Agendamento,
   agendamentos,
   atualizarAgendamentos,
   servicos,
 } from '../database/agendamentos'
+import { prisma } from '../lib/prisma'
 
-export function criarAgendamento(req: Request, res: Response) {
+export async function criarAgendamento(req: Request, res: Response) {
   const { nome, servico, data, hora } = req.body as Agendamento
 
   if (!servico || !data || !hora) {
@@ -23,23 +23,25 @@ export function criarAgendamento(req: Request, res: Response) {
     return res.status(400).json({ erro: 'Serviço inválido' })
   }
 
-  const existe = agendamentos.find(
-    (item) => item.data === data && item.hora === hora
-  )
+  const existe = await prisma.agendamento.findFirst({
+    where: {
+      data,
+      hora,
+    },
+  })
 
   if (existe) {
     return res.status(400).json({ erro: 'Horário já ocupado' })
   }
 
-  const novo = {
-    id: crypto.randomUUID(),
-    nome,
-    servico,
-    data,
-    hora,
-  }
-
-  agendamentos.push(novo)
+  const novo = await prisma.agendamento.create({
+    data: {
+      nome,
+      servico,
+      data,
+      hora,
+    },
+  })
 
   res.status(201).json(novo)
 }
