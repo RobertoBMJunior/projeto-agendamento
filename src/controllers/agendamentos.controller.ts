@@ -46,14 +46,20 @@ export async function criarAgendamento(req: Request, res: Response) {
   res.status(201).json(novo)
 }
 
-export function listarAgendamentos(req: Request, res: Response) {
-  res.json(agendamentos)
+export async function listarAgendamentos(req: Request, res: Response) {
+  const dados = await prisma.agendamento.findMany()
+
+  res.json(dados)
 }
 
-export function buscarPorId(req: Request, res: Response) {
+export async function buscarPorId(req: Request<{ id: string }>, res: Response) {
   const { id } = req.params
 
-  const registro = agendamentos.find((item) => item.id === id)
+  const registro = await prisma.agendamento.findUnique({
+    where: {
+      id,
+    },
+  })
 
   if (!registro) {
     return res.status(404).json({ erro: 'Não encontrado' })
@@ -62,18 +68,24 @@ export function buscarPorId(req: Request, res: Response) {
   res.json(registro)
 }
 
-export function atualizarAgendamento(req: Request, res: Response) {
+export async function atualizarAgendamento(
+  req: Request<{ id: string }>,
+  res: Response
+) {
   const { id } = req.params
-  const dados = req.body
+  const dados = req.body as Agendamento
 
-  const index = agendamentos.findIndex((item) => item.id === id)
+  const agendamentoAtual = await prisma.agendamento.findFirst({
+    where: {
+      id,
+    },
+  })
 
-  if (index === -1) {
-    return res.status(404).json({ erro: 'Não encontrado' })
+  if (!agendamentoAtual) {
+    return res.status(404).json({ erro: 'Agendamento não encontrado' })
   }
 
-  const atual = agendamentos[index]!
-  const atualizado = { ...atual, ...dados }
+  const atualizado = { ...agendamentoAtual, ...dados }
 
   // valida nome
   if (atualizado.nome && atualizado.nome.trim() === '') {
@@ -86,28 +98,54 @@ export function atualizarAgendamento(req: Request, res: Response) {
   }
 
   // valida conflito de horário
-  const conflito = agendamentos.find(
-    (item) =>
-      item.data === atualizado.data &&
-      item.hora === atualizado.hora &&
-      item.id !== id
-  )
+  const conflito = await prisma.agendamento.findFirst({
+    where: {
+      data: atualizado.data,
+      hora: atualizado.hora,
+      id: {
+        not: id,
+      },
+    },
+  })
 
   if (conflito) {
     return res.status(400).json({ erro: 'Horário já ocupado' })
   }
 
-  agendamentos[index] = atualizado
+  const registroAtualizado = await prisma.agendamento.update({
+    where: { id },
+    data: {
+      nome: atualizado.nome.trim(),
+      servico: atualizado.servico,
+      data: atualizado.data,
+      hora: atualizado.hora,
+    },
+  })
 
-  res.json(atualizado)
+  res.json(registroAtualizado)
 }
 
-export function deletarAgendamento(req: Request, res: Response) {
+export async function deletarAgendamento(
+  req: Request<{ id: string }>,
+  res: Response
+) {
   const { id } = req.params
 
-  const novaLista = agendamentos.filter((item) => item.id !== id)
+  const existe = await prisma.agendamento.findUnique({
+    where: {
+      id,
+    },
+  })
 
-  atualizarAgendamentos(novaLista)
+  if (!existe) {
+    return res.status(404).json({ erro: 'Agendamento não encontrado' })
+  }
+
+  await prisma.agendamento.delete({
+    where: {
+      id,
+    },
+  })
 
   res.status(204).send()
 }
