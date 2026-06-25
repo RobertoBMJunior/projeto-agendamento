@@ -1,11 +1,6 @@
 //agendamentos.controller.ts
 import { Request, Response } from 'express'
-import {
-  Agendamento,
-  agendamentos,
-  atualizarAgendamentos,
-  servicos,
-} from '../database/agendamentos'
+import { Agendamento, servicos } from '../database/agendamentos'
 import { prisma } from '../lib/prisma'
 
 export async function criarAgendamento(req: Request, res: Response) {
@@ -75,7 +70,7 @@ export async function atualizarAgendamento(
   const { id } = req.params
   const dados = req.body as Agendamento
 
-  const agendamentoAtual = await prisma.agendamento.findFirst({
+  const agendamentoAtual = await prisma.agendamento.findUnique({
     where: {
       id,
     },
